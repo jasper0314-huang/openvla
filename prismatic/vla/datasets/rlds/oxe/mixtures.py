@@ -206,5 +206,10 @@ OXE_NAMED_MIXTURES: Dict[str, List[Tuple[str, float]]] = {
     "libero_10_no_noops": [
         ("libero_10_no_noops", 1.0),
     ],
+
+    # === Custom Finetuning Datasets ===
+    "custom_finetuning": [
+        ("custom_finetuning", 1.0),
+    ],
 }
 # fmt: on

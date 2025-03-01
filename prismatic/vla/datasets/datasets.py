@@ -9,11 +9,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Tuple, Type
 
+import time
 import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import Dataset, IterableDataset
 from transformers import PreTrainedTokenizerBase
+from transformers.trainer_utils import set_seed
 
 from prismatic.models.backbones.llm.prompting import PromptBuilder
 from prismatic.models.backbones.vision import ImageTransform
@@ -111,6 +113,7 @@ class RLDSDataset(IterableDataset):
         num_parallel_calls: int = 16,
     ) -> None:
         """Lightweight wrapper around RLDS TFDS Pipeline for use with PyTorch/OpenVLA Data Loaders."""
+        assert train, "Only support training for now, because current data order is completely random (and may be duplicate)"
         self.data_root_dir, self.data_mix, self.batch_transform = data_root_dir, data_mix, batch_transform
 
         # Configure RLDS Dataset(s)
@@ -170,17 +173,31 @@ class RLDSDataset(IterableDataset):
         # fmt: on
 
         # Initialize RLDS Dataset
+        self.rlds_config = rlds_config
         self.dataset, self.dataset_length, self.dataset_statistics = self.make_dataset(rlds_config)
+        del self.dataset  # dataset will be re-initialized in __iter__
 
     def make_dataset(self, rlds_config):
         return make_interleaved_dataset(**rlds_config)
 
     def __iter__(self) -> Dict[str, Any]:
-        for rlds_batch in self.dataset.as_numpy_iterator():
+        # [CRITICAL] In distributed training, we need to ensure that each worker gets different data.
+        # Besides, to accelerate resume training, we set `ignore_data_skip` to `True` in Trainer.
+        # So here we set a time- and worker-dependent seed to avoid the duplicate order for different runs and workers.
+        # Note that this will sacrifice the exact reproducibility.
+        seed = (torch.initial_seed() * int(time.time() * 10e5)) % 2**32
+        set_seed(seed)
+        dataset, _, _ = self.make_dataset(self.rlds_config)
+
+        for rlds_batch in dataset.as_numpy_iterator():
             yield self.batch_transform(rlds_batch)
 
     def __len__(self) -> int:
-        return self.dataset_length
+        worker_info = torch.utils.data.get_worker_info()
+        if worker_info is not None:
+            return self.dataset_length // worker_info.num_workers
+        else:
+            return self.dataset_length
 
     # === Explicitly Unused ===
     def __getitem__(self, idx: int) -> None:

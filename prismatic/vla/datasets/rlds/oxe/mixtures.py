@@ -15,6 +15,10 @@ OXE_NAMED_MIXTURES: Dict[str, List[Tuple[str, float]]] = {
         ("bridge_orig", 1.0),                                   # Original Version of Bridge V2 from Project Website
     ],
 
+    # === RT-1 Dataset ===
+    "rt1": [
+        ("fractal20220817_data", 1.0),                          # Google RT-1 Robot Data (Large-Scale)
+    ],
 
     # === [Moderate-Scale] Bridge++ Mixtures ===
     "bridge_rt_1": [

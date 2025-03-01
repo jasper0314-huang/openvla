@@ -108,6 +108,7 @@ class RLDSDataset(IterableDataset):
         train: bool = True,
         image_aug: bool = False,
         load_all_data_for_training: bool = True,
+        num_parallel_calls: int = 16,
     ) -> None:
         """Lightweight wrapper around RLDS TFDS Pipeline for use with PyTorch/OpenVLA Data Loaders."""
         self.data_root_dir, self.data_mix, self.batch_transform = data_root_dir, data_mix, batch_transform
@@ -138,7 +139,7 @@ class RLDSDataset(IterableDataset):
             ),
             frame_transform_kwargs=dict(
                 resize_size=resize_resolution,
-                num_parallel_calls=16,                          # For CPU-intensive ops (decoding, resizing, etc.)
+                num_parallel_calls=num_parallel_calls,                          # For CPU-intensive ops (decoding, resizing, etc.)
             ),
             dataset_kwargs_list=per_dataset_kwargs,
             shuffle_buffer_size=shuffle_buffer_size,

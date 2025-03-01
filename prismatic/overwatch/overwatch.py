@@ -17,7 +17,7 @@ RICH_FORMATTER, DATEFMT = "| >> %(message)s", "%m/%d [%H:%M:%S]"
 # Set Logging Configuration
 LOG_CONFIG = {
     "version": 1,
-    "disable_existing_loggers": True,
+    "disable_existing_loggers": False,
     "formatters": {"simple-console": {"format": RICH_FORMATTER, "datefmt": DATEFMT}},
     "handlers": {
         "console": {

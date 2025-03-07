@@ -110,6 +110,8 @@ class RLDSDataset(IterableDataset):
         train: bool = True,
         image_aug: bool = False,
         load_all_data_for_training: bool = True,
+        num_read_threads: int = None,
+        num_transform_threads: int = None,
         fully_randomized: bool = True,
     ) -> None:
         """Lightweight wrapper around RLDS TFDS Pipeline for use with PyTorch/OpenVLA Data Loaders."""
@@ -147,8 +149,8 @@ class RLDSDataset(IterableDataset):
             shuffle_buffer_size=shuffle_buffer_size,
             sample_weights=weights,
             balance_weights=True,
-            traj_transform_threads=len(mixture_spec),
-            traj_read_threads=len(mixture_spec),
+            traj_transform_threads=len(mixture_spec) if num_transform_threads is None else num_transform_threads,
+            traj_read_threads=len(mixture_spec) if num_read_threads is None else num_read_threads,
             train=train,
             load_all_data_for_training=load_all_data_for_training,
         )
